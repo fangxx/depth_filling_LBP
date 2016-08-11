@@ -10,7 +10,7 @@ d_img = im2double(d_img);
 % d_img = imresize(d_img,0.1);
 % d_img(d_img<0.05) = 0;
 tic;
-f_img = depth_filling_LBP(c_img,d_img,20);
+f_img = depth_filling_LBP(c_img,d_img,10);
 toc;
 f_img(d_img~=0) = d_img(d_img~=0);
 figure,imshow(c_img);

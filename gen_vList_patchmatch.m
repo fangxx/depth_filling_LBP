@@ -4,7 +4,7 @@ label = 8;
 vList = zeros(h*w,label);
 dataCost = zeros(h*w,label);
 
-scale = 1;
+scale = 0.8;
 r_img = imresize(c_img,scale);
 pSize = 7; nn = 20;
 h_img = c_img;
@@ -19,8 +19,8 @@ tic;
 % d_img_3(:,:,3) = d_img;
 % color_img_hole = color_img;
 % color_img_hole(d_img_3==0) = 0;
-% cnn = patchmatch(color_img, color_img_hole, pSize, nn, 250, [], 10, [], [], [], 2);
-cnn = patchmatch(r_img, rh_img, pSize, nn, 200, [], 10, [], [], [], 2);
+% cnn = patchmatch(color_img, color_img_hole, pSize, nn, 80, [], 10, [], [], [], 2);
+cnn = patchmatch(r_img, rh_img, pSize, nn, 50, [], 5, [], [], [], 2);
 visualizer(rh_img*255, cnn, pSize);
 toc;
 global p;
@@ -40,11 +40,13 @@ for y = 1:h
                 ny = n_c(2)*floor(1/scale);
                 val = get_label_value(d_img,nx,ny);
                 
-                if val > 0.0001
+                if val > 0.001
                     vList(index,nL) = val;
+%                     vList(index,nL) = get_depth_value(p_dimg,x,y,nx,ny,pSize,val);
                     c_cost = get_color_distance(p_cimg,x,y,nx,ny,pSize);
-                    d_cost = get_depth_distance(p_dimg,x,y,nx,ny,pSize);
-                    dataCost(index,nL) = c_cost + 0*d_cost;
+%                     d_cost = get_depth_distance(p_dimg,x,y,nx,ny,pSize);
+                    d_cost = get_color_distance(p_dimg,x,y,nx,ny,pSize);
+                    dataCost(index,nL) = 0*c_cost + d_cost;
                     nL = nL+1;
                     if nL>label
                         break
@@ -64,7 +66,7 @@ end
 dataCost(vList==0) = 100;
 t_img = vList(:,1);
 t_img = reshape(t_img,[h,w]);
-figure,imshow(t_img);
+figure,imshow(t_img),title('t_img');
 end     % gen_vList_patchmatch() end here
 
 function [val] = get_label_value(d_img,nx,ny)
@@ -100,6 +102,19 @@ sub_b(sub_b ==0) = [];
 d_a = sum(sub_a(:))/(numel(sub_a)+0.0001);
 d_b = sum(sub_b(:))/(numel(sub_b)+0.0001);
 cost = abs(d_a-d_b);
+end
+
+function [nval] = get_depth_value(img, x, y, nx, ny, r,val)
+global p;
+sub_a = img(y+p-r:y+p+r,x+p-r:x+p+r);
+sub_b = img(ny+p-r:ny+p+r,nx+p-r:nx+p+r);
+weight = ones(2*r+1,2*r+1);
+weight(sub_a==0) = 0;
+weight(sub_b==0) = 0;
+sub_a(sub_a ==0) = 0;
+sub_b(sub_b ==0) = 10000;
+scale = weight.*sub_a./sub_b;
+nval = val*sum(scale(:))/(0.0001+sum(weight(:)));
 end
 
 

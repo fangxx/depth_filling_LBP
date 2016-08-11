@@ -26,13 +26,19 @@ for it = 1:it_num
 %         fprintf('direction: %d\n',di);
         %% msg = BP(msg,di);
         new_msg = zeros(h*w,nLabel);
+        xList = nList(:,di);
+        xList(nList(:,di)==0) = 1; % this need improve
         for i = 1:nLabel
             min_val = zeros(h*w,1);
             min_val(:) = 10000;
             for j = 1:nLabel
                 p = zeros(h*w,1);
-                p = p + smoothCost(i,j);
-                p = p + msg(:,nData,j);
+%                 p = p + smoothCost(i,j);
+                sC = 4*abs(vList(:,j) - vList(xList,i));
+                dC = msg(:,nData,j);
+                p = p + sC + dC;
+%                 p = p + 5*abs(vList(:,j) - vList(xList,i));   %smooth cost
+%                 p = p + msg(:,nData,j);
                 for k = 1:nDir
                     if k ~= di
                         p = p + msg(:,k,j);
@@ -82,13 +88,13 @@ for it = 1:it_num
 %     [vList,dataCost] = gen_vList_four(c_img,t_map);
 %     msg(:,nData,:) = dataCost(:,:); %initial data cost
     
-    if(it == 1) figure(1),imshow(t_map); end
+    if(it == 1) figure,imshow(t_map),title('it_one'); end
 end
 end
 
 
 function cost = smoothCost(i,j)
-    cost = 5*abs(i-j);
+    cost = 1*abs(i-j);
 end
 
 
